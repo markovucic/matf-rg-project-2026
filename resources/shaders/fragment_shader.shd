@@ -1,0 +1,21 @@
+#version 330 core
+
+in vec3 pos;
+in vec3 _normal;
+
+out vec4 FragColor;
+
+uniform vec3 vColor;
+uniform vec3 lightPos;
+uniform vec3 lightColor;
+uniform float ambientInt;
+uniform float diffuseInt;
+uniform float specularInt;
+
+void main(){
+
+    vec3 ambient = ambientInt * lightColor;
+    vec3 diffuse = diffuseInt * max(dot(normalize(_normal), normalize(pos - lightPos)), 0) * lightColor;
+
+    FragColor = vec4((ambient + diffuse) * vColor, 1.0f);
+}
