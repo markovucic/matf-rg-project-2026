@@ -1,0 +1,53 @@
+#ifndef APP_RUBIKSCUBE_HPP
+#define APP_RUBIKSCUBE_HPP
+
+#include <engine/resources/Model.hpp>
+#include <engine/resources/Shader.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+namespace app {
+enum class CubeAxis { X,
+                      Y,
+                      Z };
+
+struct SubCube {
+    glm::mat4 transform{1.0f};
+    glm::ivec3 grid_position{};// where it sits in the 3x3x3 grid, -1/0/1 per axis
+};
+
+// 27 little cubes arranged in a grid, all pointing at the same Model (the geometry is
+// identical, only the transform per cube changes). update() advances whatever layer
+// rotation is currently animating.
+class RubiksCube {
+public:
+    explicit RubiksCube(engine::resources::Model *cube_model, float spacing = 1.05f);
+
+    // ignored if a rotation is already playing, so you can't spam two layers at once
+    void start_rotation(CubeAxis axis, int layer, float angle_deg);
+
+    void update(float delta_time);
+
+    void draw(const engine::resources::Shader *shader);
+
+    bool is_rotating() const {
+        return m_is_rotating;
+    }
+
+private:
+    void update_grid_positions(CubeAxis axis, int layer, int direction);
+
+    SubCube m_cubes[3][3][3];
+    // Model instead of Mesh because engine::resources::Model only hands out meshes()
+    // as const, and Mesh::draw isn't a const method - so we just hold the whole model
+    engine::resources::Model *m_cube_model;
+
+    bool m_is_rotating{false};
+    CubeAxis m_active_axis{CubeAxis::Y};
+    int m_active_layer{0};
+    float m_current_angle{0.0f};
+    float m_target_angle{0.0f};
+    float m_rotation_speed{300.0f};
+};
+}// namespace app
+#endif//APP_RUBIKSCUBE_HPP
