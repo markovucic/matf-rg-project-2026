@@ -34,7 +34,9 @@ public:
 
     void setIndices(const std::vector<unsigned>& indices);
 
-    int loadFromFile(const std::string &verticesFilename, const std::string &indicesFilename);
+    int loadFromCsv(const std::string &verticesFilename, const std::string &indicesFilename);
+
+    int loadFromAssimpObj(const std::string &Filename);
 
     void setAttribute(unsigned index, unsigned length);
 

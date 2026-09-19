@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 # Traženje sistemskih paketa
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
+find_package(assimp REQUIRED)
 
 include_directories(glad/include)
 
@@ -15,9 +16,14 @@ add_executable(rg main.cpp
         shader.h
         camera.h
         Object.cpp
-        Object.h)
+        Object.h
+        RubiksCube.cpp
+        RubiksCube.h
+        Mesh.h
+        Mesh.cpp
+        Model.h)
 
-target_link_libraries(rg PRIVATE glad glfw OpenGL::GL ${CMAKE_DL_LIBS})
+target_link_libraries(rg PRIVATE glad glfw OpenGL::GL assimp ${CMAKE_DL_LIBS})
 
 #
 #cmake_minimum_required(VERSION 3.10)

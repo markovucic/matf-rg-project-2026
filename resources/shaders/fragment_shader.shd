@@ -1,21 +1,46 @@
 #version 330 core
 
 in vec3 pos;
-in vec3 _normal;
+in vec3 WorldNormal;
+in vec3 LocalNormal;
 
 out vec4 FragColor;
 
-uniform vec3 vColor;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform float ambientInt;
 uniform float diffuseInt;
-uniform float specularInt;
 
 void main(){
+    // 1. ODREĐIVANJE BOJE NA OSNOVU LOKALNE NORMALE (Boja ostaje zakovana za kockicu)
+    vec3 localNorm = normalize(LocalNormal);
+    vec3 baseColor = vec3(0.05); // Tamni okvir
 
+    if (abs(localNorm.x) > 0.8) {
+        baseColor = (localNorm.x > 0.0) ? vec3(0.9, 0.0, 0.0)   // +X : Crvena
+                                       : vec3(1.0, 0.4, 0.0);  // -X : Narandžasta
+    }
+    else if (abs(localNorm.y) > 0.8) {
+        baseColor = (localNorm.y > 0.0) ? vec3(0.95, 0.95, 0.95) // +Y : Bela
+                                       : vec3(0.9, 0.8, 0.0);   // -Y : Žuta
+    }
+    else if (abs(localNorm.z) > 0.8) {
+        baseColor = (localNorm.z > 0.0) ? vec3(0.0, 0.7, 0.1)   // +Z : Zelena
+                                       : vec3(0.0, 0.2, 0.8);  // -Z : Plava
+    }
+
+    // 2. PRORAČUN SVETLA KORISTEĆI SVETSKU NORMALU
+    vec3 worldNorm = normalize(WorldNormal);
+    vec3 lightDir = normalize(lightPos - pos);
+
+    // Ambijentalno svetlo
     vec3 ambient = ambientInt * lightColor;
-    vec3 diffuse = diffuseInt * max(dot(normalize(_normal), normalize(pos - lightPos)), 0) * lightColor;
 
-    FragColor = vec4((ambient + diffuse) * vColor, 1.0f);
+    // Difuzno svetlo
+    float diff = max(dot(worldNorm, lightDir), 0.0);
+    vec3 diffuse = diffuseInt * diff * lightColor;
+
+    // Koji rezultat dobijamo: Boja se rotira sa kockicom, a senka i svetlo ostaju dinamični u prostoru!
+    vec3 result = (ambient + diffuse) * baseColor;
+    FragColor = vec4(result, 1.0);
 }

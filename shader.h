@@ -79,6 +79,11 @@ public:
         glUseProgram(program);
     }
 
+    void setBool(const std::string &name, bool value) const {
+        glUniform1i(glGetUniformLocation(program, name.c_str()), (int)value);
+    }
+
+
     void setUniform4f(const std::string& name, float x, float y, float z, float w) const {
         int uniformId = glGetUniformLocation(program, name.c_str());
         glUniform4f(uniformId, x, y, z, w);
@@ -93,9 +98,15 @@ public:
         int uniformId = glGetUniformLocation(program, name.c_str());
         glUniform1f(uniformId, x);
     }
-    void setUniformMatrix4f(const std::string& name, const float* matrix) const {
+
+    void setUniform1i(const std::string& name, int x) const {
         int uniformId = glGetUniformLocation(program, name.c_str());
-        glUniformMatrix4fv(uniformId, 1, GL_FALSE, matrix);
+        glUniform1i(uniformId, x);
+    }
+
+    void setUniformMatrix4f(const std::string& name, const glm::mat4& matrix) const {
+        int uniformId = glGetUniformLocation(program, name.c_str());
+        glUniformMatrix4fv(uniformId, 1, GL_FALSE, &matrix[0][0]);
     }
 
 

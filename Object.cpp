@@ -28,7 +28,7 @@ void Object::setIndices(const std::vector<unsigned>& indices) {
 }
 
 
-int Object::loadFromFile(const std::string &verticesFilename, const std::string &indicesFilename) {
+int Object::loadFromCsv(const std::string &verticesFilename, const std::string &indicesFilename) {
 
     std::ifstream vifs(verticesFilename);
     if (!vifs.is_open()) {
@@ -79,18 +79,13 @@ int Object::loadFromFile(const std::string &verticesFilename, const std::string 
             indices.push_back(std::stoi(cell));
         }
     }
+}
 
 
-
-
-
-    // Primer pristupa podacima iz trenutnog reda:
-
-
-    // row[0] je 1. kolona, row[1] je 2. kolona...
-        std::cout << "Kolona 1: " << row[0] << " | Kolona 2: " << row[1] << '\n';
+int Object::loadFromAssimpObj(const std::string &Filename) {
 
 }
+
 
 void Object::setAttribute(unsigned index, unsigned length) {
     attrib_lengths[index] = length;
