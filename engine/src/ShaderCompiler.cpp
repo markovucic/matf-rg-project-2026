@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 // clang-format on
 
+#include <cstdint>
 #include <engine/graphics/OpenGL.hpp>
 #include <engine/resources/ShaderCompiler.hpp>
 #include <engine/util/Errors.hpp>

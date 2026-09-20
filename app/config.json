@@ -1,11 +1,27 @@
 {
   "resources": {
     "models": {
+      "sub_cube": {
+        "path": "sub_cube/sub_cube.obj",
+        "flip_uvs": false
+      },
+      "sphere_core": {
+        "path": "sphere_core/sphere_core.obj",
+        "flip_uvs": false
+      },
+      "desk": {
+        "path": "desk/desk.glb",
+        "flip_uvs": false
+      },
+      "lamp": {
+        "path": "lamp/lamp.glb",
+        "flip_uvs": false
+      }
     }
   },
   "window": {
     "height": 600,
-    "title": "Hello, window!",
+    "title": "Rubik's Cube",
     "width": 800
   }
 }
