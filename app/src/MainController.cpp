@@ -1,6 +1,7 @@
 #include <app/MainController.hpp>
 #include <engine/core/Engine.hpp>
 #include <engine/graphics/GraphicsController.hpp>
+#include <imgui.h>
 
 namespace app {
 void MainController::initialize() {
@@ -28,6 +29,10 @@ void MainController::poll_events() {
         m_camera_control_enabled = !m_camera_control_enabled;
         // tried GLFW_CURSOR_DISABLED here, but it made the camera spiral out of control
         m_skip_next_mouse_delta = true;
+    }
+
+    if (platform->key(engine::platform::KEY_F1).state() == engine::platform::Key::State::JustPressed) {
+        m_show_gui = !m_show_gui;
     }
 
     // don't queue up another layer rotation while one is still playing
@@ -71,13 +76,71 @@ void MainController::draw() {
     shader->use();
     shader->set_mat4("projection", graphics->projection_matrix());
     shader->set_mat4("view", graphics->camera()->view_matrix());
-    // light is just fixed in place for now, could hook this up to config/gui later
-    shader->set_vec3("lightPos", glm::vec3(3.0f, 4.0f, 5.0f));
-    shader->set_vec3("lightColor", glm::vec3(1.0f));
-    shader->set_float("ambientInt", 0.3f);
-    shader->set_float("diffuseInt", 0.8f);
+    shader->set_vec3("viewPos", graphics->camera()->Position);
+    set_light_uniforms(shader);
 
     m_rubiks_cube->draw(shader);
+
+    draw_gui();
+}
+
+void MainController::set_light_uniforms(engine::resources::Shader *shader) {
+    shader->set_float("shininess", m_shininess);
+    shader->set_float("specularStrength", m_specular_strength);
+
+    shader->set_vec3("pointLight.position", m_point_light_pos);
+    shader->set_vec3("pointLight.ambient", m_point_light_color * 0.15f);
+    shader->set_vec3("pointLight.diffuse", m_point_light_color * 0.6f);
+    shader->set_vec3("pointLight.specular", m_point_light_color);
+    shader->set_float("pointLight.constant", 1.0f);
+    shader->set_float("pointLight.linear", 0.09f);
+    shader->set_float("pointLight.quadratic", 0.032f);
+
+    // aim the lamp at the cube's center, wherever it's currently positioned
+    glm::vec3 spot_direction = glm::normalize(glm::vec3(0.0f) - m_spot_light_pos);
+    shader->set_vec3("spotLight.position", m_spot_light_pos);
+    shader->set_vec3("spotLight.direction", spot_direction);
+    shader->set_float("spotLight.cutOff", glm::cos(glm::radians(m_spot_inner_cutoff_deg)));
+    shader->set_float("spotLight.outerCutOff", glm::cos(glm::radians(m_spot_outer_cutoff_deg)));
+    shader->set_vec3("spotLight.ambient", m_spot_light_color * 0.05f);
+    shader->set_vec3("spotLight.diffuse", m_spot_light_color);
+    shader->set_vec3("spotLight.specular", m_spot_light_color);
+    shader->set_float("spotLight.constant", 1.0f);
+    shader->set_float("spotLight.linear", 0.045f);
+    shader->set_float("spotLight.quadratic", 0.0075f);
+}
+
+void MainController::draw_gui() {
+    if (!m_show_gui) {
+        return;
+    }
+
+    auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
+    graphics->begin_gui();
+
+    ImGui::Begin("Lighting (F1 to hide)");
+
+    ImGui::Text("Room light");
+    ImGui::ColorEdit3("Room color", &m_point_light_color.x);
+    ImGui::SliderFloat3("Room position", &m_point_light_pos.x, -10.0f, 10.0f);
+
+    ImGui::Separator();
+    ImGui::Text("Lamp");
+    ImGui::ColorEdit3("Lamp color", &m_spot_light_color.x);
+    ImGui::SliderFloat3("Lamp position", &m_spot_light_pos.x, -10.0f, 10.0f);
+    ImGui::SliderFloat("Inner cutoff", &m_spot_inner_cutoff_deg, 1.0f, 45.0f);
+    if (m_spot_outer_cutoff_deg < m_spot_inner_cutoff_deg) {
+        m_spot_outer_cutoff_deg = m_spot_inner_cutoff_deg;
+    }
+    ImGui::SliderFloat("Outer cutoff", &m_spot_outer_cutoff_deg, m_spot_inner_cutoff_deg, 60.0f);
+
+    ImGui::Separator();
+    ImGui::SliderFloat("Shininess", &m_shininess, 2.0f, 256.0f);
+    ImGui::SliderFloat("Specular strength", &m_specular_strength, 0.0f, 1.0f);
+
+    ImGui::End();
+
+    graphics->end_gui();
 }
 
 void MainController::end_draw() {
