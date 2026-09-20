@@ -6,6 +6,7 @@
 #ifndef SKYBOX_HPP
 #define SKYBOX_HPP
 
+#include <cstdint>
 #include <filesystem>
 #include <utility>
 

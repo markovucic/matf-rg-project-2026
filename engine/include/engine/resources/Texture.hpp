@@ -6,6 +6,7 @@
 #ifndef MATF_RG_PROJECT_TEXTURE_HPP
 #define MATF_RG_PROJECT_TEXTURE_HPP
 
+#include <cstdint>
 #include <filesystem>
 #include <string_view>
 #include <utility>

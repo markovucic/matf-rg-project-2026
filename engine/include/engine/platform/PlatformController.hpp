@@ -6,6 +6,7 @@
 #ifndef MATF_RG_PROJECT_PLATFORM_H
 #define MATF_RG_PROJECT_PLATFORM_H
 
+#include <cstdint>
 #include <engine/core/Controller.hpp>
 #include <engine/platform/Input.hpp>
 #include <engine/platform/PlatformEventObserver.hpp>

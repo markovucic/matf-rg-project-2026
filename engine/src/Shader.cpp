@@ -1,6 +1,7 @@
 // clang-format off
 #include <glad/glad.h>
 // clang-format on
+#include <cstdint>
 #include <engine/graphics/OpenGL.hpp>
 #include <engine/resources/Shader.hpp>
 

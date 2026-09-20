@@ -1,6 +1,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <cstdint>
 #include <engine/graphics/OpenGL.hpp>
 #include <engine/resources/ResourcesController.hpp>
 #include <engine/resources/ShaderCompiler.hpp>
@@ -132,7 +133,7 @@ Model *ResourcesController::model(const std::string &name) {
         }
 
         spdlog::info("load_model(name={}, path={})", name, model_path.string());
-        const aiScene *scene = importer.ReadFile(model_path, flags);
+        const aiScene *scene = importer.ReadFile(model_path.string(), flags);
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
             std::string msg = std::format("Assimp error while reading model: {} from path {}.", model_path.string(), name);
             throw util::EngineError(util::EngineError::Type::AssetLoadingError, msg);
@@ -149,7 +150,7 @@ Texture *ResourcesController::texture(const std::string &name, const std::filesy
     if (!result) {
         spdlog::info("load_texture(path={})", path.string());
         auto texture = graphics::OpenGL::generate_texture(path, flip_uvs);
-        result = std::make_unique<Texture>(Texture(texture, type, path, path.stem()));
+        result = std::make_unique<Texture>(Texture(texture, type, path, path.stem().string()));
     }
     return result.get();
 }

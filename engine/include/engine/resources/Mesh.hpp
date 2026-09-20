@@ -6,6 +6,7 @@
 #ifndef MATF_RG_PROJECT_MESH_HPP
 #define MATF_RG_PROJECT_MESH_HPP
 
+#include <cstdint>
 #include <engine/resources/Texture.hpp>
 #include <glm/glm.hpp>
 #include <vector>
