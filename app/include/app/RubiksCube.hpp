@@ -5,6 +5,7 @@
 #include <engine/resources/Shader.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <vector>
 
 namespace app {
 enum class CubeAxis { X,
@@ -15,6 +16,13 @@ struct SubCube {
     glm::mat4 transform{1.0f};
     glm::ivec3 grid_position{};// where it currently sits in the grid, updates every move
     glm::ivec3 home_position{}; // where it started out - from this we deduce which faces are stickers.
+};
+
+// where one sticker's glowing edge currently sits in the world, and its color - used to
+// give the neon strips real point lights that move and turn with the cubie they belong to
+struct GlowSource {
+    glm::vec3 position;
+    glm::vec3 color;
 };
 
 // 27 little cubes arranged in a grid, all pointing at the same Model.
@@ -29,6 +37,10 @@ public:
     void update(float delta_time);
 
     void draw(const engine::resources::Shader *shader);
+
+    // one entry per sticker (54 for a solved 3x3x3), following each cubie's current
+    // transform - so a light stays attached to its own sticker through every rotation
+    std::vector<GlowSource> glow_sources() const;
 
     bool is_rotating() const {
         return m_is_rotating;

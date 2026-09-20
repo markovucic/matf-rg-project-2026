@@ -60,6 +60,9 @@ uniform float specularStrength;
 uniform float tubeSpecularStrength;
 uniform float neonEdgeOffset;
 uniform float neonEdgeWidth;
+// false for meshes with no material of their own - skips
+// sampling the cubie's textures/tangent
+uniform bool useMaterialMaps;
 
 // distance-based glow
 float edge_glow_factor(vec3 local_pos, vec3 local_norm) {
@@ -107,17 +110,23 @@ void main(){
 
     float glow = isSticker ? edge_glow_factor(LocalPos, localNorm) : 0.0;
 
-    baseColor *= texture(texture_diffuse1, TexCoords).rgb;// subtle plastic surface variation
+    vec3 bumpedNormal = worldNorm;
+    float tubeMask = 0.0;
 
-    // bulge the neon tube band outward using the normal map, in tangent space
-    vec3 tangent = normalize(WorldTangent - dot(WorldTangent, worldNorm) * worldNorm);
-    vec3 bitangent = cross(worldNorm, tangent);
-    mat3 TBN = mat3(tangent, bitangent, worldNorm);
-    vec3 sampledNormal = texture(texture_normal1, TexCoords).rgb * 2.0 - 1.0;
-    vec3 bumpedNormal = normalize(TBN * sampledNormal);
+    if (useMaterialMaps) {
+        baseColor *= texture(texture_diffuse1, TexCoords).rgb;// subtle plastic surface variation
+
+        // bulge the neon tube band outward using the normal map, in tangent space
+        vec3 tangent = normalize(WorldTangent - dot(WorldTangent, worldNorm) * worldNorm);
+        vec3 bitangent = cross(worldNorm, tangent);
+        mat3 TBN = mat3(tangent, bitangent, worldNorm);
+        vec3 sampledNormal = texture(texture_normal1, TexCoords).rgb * 2.0 - 1.0;
+        bumpedNormal = normalize(TBN * sampledNormal);
+
+        tubeMask = texture(texture_specular1, TexCoords).r;
+    }
 
     // the hidden plastic body shouldn't be as shiny as stickers
-    float tubeMask = texture(texture_specular1, TexCoords).r;
     float faceSpecularStrength = isSticker ? specularStrength : specularStrength * 0.2;
     faceSpecularStrength = mix(faceSpecularStrength, tubeSpecularStrength, tubeMask);
 

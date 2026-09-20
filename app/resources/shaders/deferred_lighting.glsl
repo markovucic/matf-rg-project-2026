@@ -54,6 +54,14 @@ uniform float shininess;
 uniform float neonMix;// 0 = normal lighting, 1 = full neon look
 uniform float neonIntensity;// neon brightness boost
 
+// treats each of the cube's 6 faces as a real colored light source once neon is on, so
+// nearby surfaces (e.g. a table under the cube) actually get lit instead of just the
+// screen-space bloom glow - deferred shading is what makes adding these cheap
+#define NEON_LIGHT_COUNT 54// one per sticker on a 3x3x3 cube
+uniform vec3 neonLightPositions[NEON_LIGHT_COUNT];
+uniform vec3 neonLightColors[NEON_LIGHT_COUNT];
+uniform float neonLightStrength;// already folded neonMix and the pulse into one scalar
+
 vec3 calc_point_light(PointLight light, vec3 normal, vec3 frag_pos, vec3 view_dir, vec3 base_color, float spec_strength) {
     vec3 light_dir = normalize(light.position - frag_pos);
     vec3 halfway_dir = normalize(light_dir + view_dir);
@@ -108,6 +116,15 @@ void main(){
     // neon mode: dark except a glowing outline around each sticker
     vec3 neonLook = baseColor * neonIntensity * glow;
     result = mix(result, neonLook, neonMix);
+
+    // the neon tubes acting as actual light sources, affecting every surface, not just the cube
+    for (int i = 0; i < NEON_LIGHT_COUNT; ++i) {
+        vec3 light_dir = normalize(neonLightPositions[i] - fragPos);
+        float diff = max(dot(normal, light_dir), 0.0);
+        float dist = length(neonLightPositions[i] - fragPos);
+        float attenuation = 1.0 / (1.0 + 0.09 * dist + 0.032 * dist * dist);
+        result += neonLightColors[i] * diff * attenuation * neonLightStrength;
+    }
 
     FragColor = vec4(result, 1.0);
 

@@ -4,6 +4,7 @@
 #include <engine/graphics/GraphicsController.hpp>
 #include <engine/graphics/PostProcessController.hpp>
 #include <imgui.h>
+#include <string>
 
 namespace app {
 void MainController::initialize() {
@@ -106,12 +107,15 @@ void MainController::draw() {
     g_buffer_shader->set_float("neonEdgeOffset", m_neon_edge_offset);
     g_buffer_shader->set_float("neonEdgeWidth", m_neon_edge_width);
 
-    // solid black core filling the gaps between subcubes
+    // solid black core filling the gaps between subcubes, no material:
+    // skip sampling the cubies' texture maps for it
     constexpr float core_size = 1.5f;
     g_buffer_shader->set_mat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(core_size * 0.96f)));
     g_buffer_shader->set_vec3("homePos", glm::vec3(0.0f));
+    g_buffer_shader->set_bool("useMaterialMaps", false);
     resources->model("sphere_core")->draw(g_buffer_shader);
 
+    g_buffer_shader->set_bool("useMaterialMaps", true);
     m_rubiks_cube->draw(g_buffer_shader);
 
     gbuffer->end_geometry_pass();
@@ -139,6 +143,14 @@ void MainController::draw() {
 
     lighting_shader->set_float("neonMix", m_neon_mix);
     lighting_shader->set_float("neonIntensity", neon_intensity);
+
+    // one light per sticker, following that sticker's own cubie transform
+    auto glow_sources = m_rubiks_cube->glow_sources();
+    for (int i = 0; i < static_cast<int>(glow_sources.size()); ++i) {
+        lighting_shader->set_vec3("neonLightPositions[" + std::to_string(i) + "]", glow_sources[i].position);
+        lighting_shader->set_vec3("neonLightColors[" + std::to_string(i) + "]", glow_sources[i].color);
+    }
+    lighting_shader->set_float("neonLightStrength", neon_intensity * m_neon_mix * 0.1f);
 
     gbuffer->draw_quad();
 }

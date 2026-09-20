@@ -114,4 +114,33 @@ void RubiksCube::draw(const engine::resources::Shader *shader) {
         }
     }
 }
+
+std::vector<GlowSource> RubiksCube::glow_sources() const {
+    // matches the color-per-axis table in g_buffer.glsl
+    static const glm::vec3 k_colors[3][2] = {
+            {glm::vec3(0.9f, 0.0f, 0.0f), glm::vec3(1.0f, 0.4f, 0.0f)},  // x: +red, -orange
+            {glm::vec3(0.95f, 0.95f, 0.95f), glm::vec3(0.9f, 0.8f, 0.0f)},// y: +white, -yellow
+            {glm::vec3(0.0f, 0.7f, 0.1f), glm::vec3(0.0f, 0.2f, 0.8f)},  // z: +green, -blue
+    };
+
+    std::vector<GlowSource> sources;
+    for (const auto &plane: m_cubes) {
+        for (const auto &row: plane) {
+            for (const auto &sub_cube: row) {
+                for (int axis = 0; axis < 3; ++axis) {
+                    if (sub_cube.home_position[axis] == 0) continue;// no sticker on this axis
+
+                    glm::vec3 local_center(0.0f);
+                    local_center[axis] = static_cast<float>(sub_cube.home_position[axis]) * 0.5f;
+
+                    GlowSource source;
+                    source.position = glm::vec3(sub_cube.transform * glm::vec4(local_center, 1.0f));
+                    source.color = k_colors[axis][sub_cube.home_position[axis] > 0 ? 0 : 1];
+                    sources.push_back(source);
+                }
+            }
+        }
+    }
+    return sources;
+}
 }// namespace app
