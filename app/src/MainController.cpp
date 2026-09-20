@@ -4,6 +4,7 @@
 #include <engine/graphics/GraphicsController.hpp>
 #include <engine/graphics/PostProcessController.hpp>
 #include <imgui.h>
+#include <spdlog/spdlog.h>
 #include <string>
 
 namespace app {
@@ -54,7 +55,7 @@ void MainController::poll_events() {
     }
 
     if (platform->key(engine::platform::KEY_N).state() == engine::platform::Key::State::JustPressed) {
-        m_neon_active = !m_neon_active;
+        toggle_neon();
     }
 
     // don't queue up another layer rotation while one is still playing
@@ -124,6 +125,7 @@ void MainController::draw() {
     glm::mat4 desk_model = glm::translate(glm::mat4(1.0f), m_desk_position);
     desk_model = glm::scale(desk_model, glm::vec3(m_desk_scale));
     g_buffer_shader->set_mat4("model", desk_model);
+    g_buffer_shader->set_vec3("genericMeshColor", m_desk_color);
     resources->model("desk")->draw(g_buffer_shader);
 
     // lamp
@@ -133,6 +135,7 @@ void MainController::draw() {
     lamp_model = glm::rotate(lamp_model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     lamp_model = glm::scale(lamp_model, glm::vec3(m_lamp_scale));
     g_buffer_shader->set_mat4("model", lamp_model);
+    g_buffer_shader->set_vec3("genericMeshColor", m_lamp_color);
     resources->model("lamp")->draw(g_buffer_shader);
     g_buffer_shader->set_bool("isGenericMesh", false);
 
@@ -233,7 +236,7 @@ void MainController::draw_gui() {
     ImGui::Text("Neon (N to toggle)");
     ImGui::SliderFloat("Neon intensity", &m_neon_intensity, 1.0f, 8.0f);
     if (ImGui::Button(m_neon_active ? "Turn neon off" : "Turn neon on")) {
-        m_neon_active = !m_neon_active;
+        toggle_neon();
     }
 
     ImGui::Separator();
@@ -247,12 +250,8 @@ void MainController::draw_gui() {
     ImGui::SliderFloat("Blur spread", &post_process->blur_spread(), 0.5f, 4.0f);
 
     ImGui::Separator();
-    ImGui::Text("Desk");
-    ImGui::SliderFloat3("Desk position", &m_desk_position.x, -5.0f, 5.0f);
-    ImGui::SliderFloat("Desk scale", &m_desk_scale, 100.0f, 500.0f);
-
-    ImGui::Separator();
     ImGui::Text("Lamp model");
+    ImGui::ColorEdit3("Lamp color", &m_lamp_color.x);
     ImGui::SliderFloat3("Lamp bulb offset", &m_lamp_offset.x, -2.0f, 2.0f);
     ImGui::SliderFloat("Lamp scale", &m_lamp_scale, 0.01f, 300.0f);
 
@@ -323,8 +322,29 @@ void MainController::update_neon_mix() {
 
     if (m_neon_active) {
         m_neon_active_time += platform->dt();
+
+        if (!m_event_a_logged && m_neon_mix >= 1.0f) {
+            spdlog::info("[EVENT SEQUENCE] EVENT_A triggered (lights faded out, neon fully on) ---AFTER_N_SECONDS(N={:.1f}s)---Triggers---> EVENT_B", m_neon_hold_duration);
+            m_event_a_logged = true;
+        }
+        if (!m_event_b_logged && m_neon_active_time >= m_neon_fade_duration + m_neon_hold_duration) {
+            spdlog::info("[EVENT SEQUENCE] EVENT_B triggered (neon glow now pulsing/breathing)");
+            m_event_b_logged = true;
+        }
     } else {
         m_neon_active_time = 0.0f;
+    }
+}
+
+void MainController::toggle_neon() {
+    m_neon_active = !m_neon_active;
+    m_event_a_logged = false;
+    m_event_b_logged = false;
+
+    if (m_neon_active) {
+        spdlog::info("[EVENT SEQUENCE] ACTION_X (neon activated) ---AFTER_M_SECONDS(M={:.1f}s)---Triggers---> EVENT_A", m_neon_fade_duration);
+    } else {
+        spdlog::info("[EVENT SEQUENCE] ACTION_X (neon deactivated) -> fading back to normal lighting over {:.1f}s", m_neon_fade_duration);
     }
 }
 }
