@@ -1,0 +1,7 @@
+# Material for the Rubik's cubie - flat plastic look with a bumped/shinier neon-tube band
+newmtl cubie
+Kd 1.0 1.0 1.0
+Ks 1.0 1.0 1.0
+map_Kd diffuse.png
+map_Ks specular.png
+norm normal.png

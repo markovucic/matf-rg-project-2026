@@ -117,10 +117,10 @@ void MainController::draw() {
     shader->set_float("neonEdgeWidth", m_neon_edge_width);
 
     // solid black core filling the gaps between subcubes
-    constexpr float k_whole_cube_size = 3.1f;
-    shader->set_mat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(k_whole_cube_size * 0.96f)));
+    constexpr float core_size = 1.5f;
+    shader->set_mat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(core_size * 0.96f)));
     shader->set_vec3("homePos", glm::vec3(0.0f));
-    resources->model("sub_cube")->draw(shader);
+    resources->model("sphere_core")->draw(shader);
 
     m_rubiks_cube->draw(shader);
 }

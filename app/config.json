@@ -4,7 +4,12 @@
       "sub_cube": {
         "path": "sub_cube/sub_cube.obj",
         "flip_uvs": false
+      },
+      "sphere_core": {
+        "path": "sphere_core/sphere_core.obj",
+        "flip_uvs": false
       }
+
     }
   },
   "window": {

@@ -2,11 +2,15 @@
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoords;
+layout (location = 3) in vec3 aTangent;
 
 out vec3 pos;
 out vec3 WorldNormal;
+out vec3 WorldTangent;
 out vec3 LocalNormal;
 out vec3 LocalPos;
+out vec2 TexCoords;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -16,12 +20,15 @@ void main()
 {
     pos = vec3(model * vec4(aPos, 1.0));
 
+    mat3 normalMatrix = mat3(transpose(inverse(model)));
     // this one rotates with the cube, used for lighting
-    WorldNormal = mat3(transpose(inverse(model))) * aNormal;
+    WorldNormal = normalMatrix * aNormal;
+    WorldTangent = normalMatrix * aTangent;
 
     // this one stays fixed relative to the sub cube, so the sticker color doesn't spin with it
     LocalNormal = aNormal;
     LocalPos = aPos;// same idea, used to find how close a fragment is to a face's edge
+    TexCoords = aTexCoords;
 
     gl_Position = projection * view * vec4(pos, 1.0);
 }
@@ -31,13 +38,20 @@ void main()
 
 in vec3 pos;
 in vec3 WorldNormal;
+in vec3 WorldTangent;
 in vec3 LocalNormal;
 in vec3 LocalPos;
+in vec2 TexCoords;
 
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;// fragments brighter than 1.0 bloom
 
 uniform vec3 homePos;// where this sub cube STARTED, -1/0/1 per axis
+
+// texture maps for cubies
+uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_specular1;
+uniform sampler2D texture_normal1;
 
 struct PointLight {
     vec3 position;
@@ -159,13 +173,23 @@ void main(){
 
     float glow = isSticker ? edge_glow_factor(LocalPos, localNorm) : 0.0;
 
+    baseColor *= texture(texture_diffuse1, TexCoords).rgb;
+
+    // bulge the neon tube band outward using the normal map, in tangent space
+    vec3 tangent = normalize(WorldTangent - dot(WorldTangent, worldNorm) * worldNorm);
+    vec3 bitangent = cross(worldNorm, tangent);
+    mat3 TBN = mat3(tangent, bitangent, worldNorm);
+    vec3 sampledNormal = texture(texture_normal1, TexCoords).rgb * 2.0 - 1.0;
+    vec3 bumpedNormal = normalize(TBN * sampledNormal);
+
     // the hidden plastic body shouldn't be as shiny as stickers
+    float tubeMask = texture(texture_specular1, TexCoords).r;
     float faceSpecularStrength = isSticker ? specularStrength : specularStrength * 0.2;
-    faceSpecularStrength = mix(faceSpecularStrength, tubeSpecularStrength, glow);
+    faceSpecularStrength = mix(faceSpecularStrength, tubeSpecularStrength, tubeMask);
 
     vec3 viewDir = normalize(viewPos - pos);
-    vec3 result = calc_point_light(pointLight, worldNorm, pos, viewDir, baseColor, faceSpecularStrength)
-                + calc_spot_light(spotLight, worldNorm, pos, viewDir, baseColor, faceSpecularStrength);
+    vec3 result = calc_point_light(pointLight, bumpedNormal, pos, viewDir, baseColor, faceSpecularStrength)
+                + calc_spot_light(spotLight, bumpedNormal, pos, viewDir, baseColor, faceSpecularStrength);
 
     // neon mode: dark except a glowing outline around each sticker,
     vec3 neonLook = baseColor * neonIntensity * glow;
