@@ -8,8 +8,15 @@
       "sphere_core": {
         "path": "sphere_core/sphere_core.obj",
         "flip_uvs": false
+      },
+      "desk": {
+        "path": "desk/desk.glb",
+        "flip_uvs": false
+      },
+      "lamp": {
+        "path": "lamp/lamp.glb",
+        "flip_uvs": false
       }
-
     }
   },
   "window": {
