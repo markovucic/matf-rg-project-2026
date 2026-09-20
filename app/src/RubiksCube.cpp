@@ -2,7 +2,7 @@
 #include <cmath>
 
 namespace app {
-RubiksCube::RubiksCube(engine::resources::Model *cube_model, float spacing)
+RubiksCube::RubiksCube(engine::resources::Model *cube_model, float spacing, float cube_scale)
     : m_cube_model(cube_model) {
     // spacing just pushes the cubes apart a bit so we can see the gaps between them
     for (int x = -1; x <= 1; ++x) {
@@ -11,7 +11,8 @@ RubiksCube::RubiksCube(engine::resources::Model *cube_model, float spacing)
                 auto &sub_cube = m_cubes[x + 1][y + 1][z + 1];
                 sub_cube.grid_position = glm::ivec3(x, y, z);
                 sub_cube.home_position = glm::ivec3(x, y, z);
-                sub_cube.transform = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z) * spacing);
+                sub_cube.transform = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z) * spacing * cube_scale)
+                                    * glm::scale(glm::mat4(1.0f), glm::vec3(cube_scale));
             }
         }
     }

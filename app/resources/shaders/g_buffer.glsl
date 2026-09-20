@@ -63,6 +63,7 @@ uniform float neonEdgeWidth;
 // false for meshes with no material of their own - skips
 // sampling the cubie's textures/tangent
 uniform bool useMaterialMaps;
+uniform bool isGenericMesh;
 
 // distance-based glow
 float edge_glow_factor(vec3 local_pos, vec3 local_norm) {
@@ -83,8 +84,18 @@ float edge_glow_factor(vec3 local_pos, vec3 local_norm) {
 }
 
 void main(){
-    vec3 localNorm = normalize(LocalNormal);
     vec3 worldNorm = normalize(WorldNormal);
+
+    if (isGenericMesh) {
+        // a plain scene prop, not part of the Rubik's cube - no stickers, no neon, no tube maps
+        vec3 baseColor = vec3(0.45, 0.32, 0.2);
+        gPosition = vec4(pos, 0.0);
+        gNormal = vec4(worldNorm, 1.0);
+        gAlbedoSpec = vec4(baseColor, specularStrength);
+        return;
+    }
+
+    vec3 localNorm = normalize(LocalNormal);
 
     // both localNorm and homePos are fixed to the subcube and never change as it moves around
     bool isSticker = (localNorm.x > 0.8 && homePos.x > 0.5) || (localNorm.x < -0.8 && homePos.x < -0.5)

@@ -255,6 +255,13 @@ void AssimpSceneProcessor::process_material_type(std::vector<Texture *> &texture
     for (uint32_t i = 0; i < material_count; ++i) {
         aiString ai_texture_path_string;
         material->GetTexture(type, i, &ai_texture_path_string);
+
+        // loading .glb models
+        if (ai_texture_path_string.C_Str()[0] == '*') {
+            spdlog::warn("[ResourcesController]: skipping embedded texture {} (not supported)", ai_texture_path_string.C_Str());
+            continue;
+        }
+
         std::filesystem::path texture_path = m_model_path.parent_path() / ai_texture_path_string.C_Str();
         Texture *texture = m_resources_controller->texture(texture_path.string(), texture_path, assimp_texture_type_to_engine(type));
         textures.emplace_back(texture);

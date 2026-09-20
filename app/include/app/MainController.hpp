@@ -49,7 +49,8 @@ private:
     glm::vec3 m_point_light_color{0.6f, 0.65f, 0.8f};
 
     // lamp light - spotlight aimed at the cube from above
-    glm::vec3 m_spot_light_pos{2.5f, 4.0f, 3.0f};
+    glm::vec3 m_spot_light_pos{1.0f, -0.2f, 0.0f};
+    // lm::vec3(-0.5f, -4.0f, -2.0f
     glm::vec3 m_spot_light_color{1.0f, 0.95f, 0.8f};
     float m_spot_inner_cutoff_deg{15.0f};
     float m_spot_outer_cutoff_deg{25.0f};
@@ -74,6 +75,12 @@ private:
     // fixed rather than GUI-tunable so it can't be widened enough to overrun the sticker edge
     float m_neon_edge_offset{0.05f};
     float m_neon_edge_width{0.06f};
+
+    glm::vec3 m_desk_position{0.0f, -1.46f, 0.0f};
+    float m_desk_scale{300.0f};
+
+    glm::vec3 m_lamp_offset{-0.5f, 0.5f, 0.0f};
+    float m_lamp_scale{200.0f};
 };
 }// namespace app
 #endif//APP_MAINCONTROLLER_HPP

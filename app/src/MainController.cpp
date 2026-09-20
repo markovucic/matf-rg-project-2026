@@ -11,7 +11,7 @@ void MainController::initialize() {
     engine::graphics::OpenGL::enable_depth_testing();
 
     auto resources = engine::core::Controller::get<engine::resources::ResourcesController>();
-    m_rubiks_cube = std::make_unique<RubiksCube>(resources->model("sub_cube"));
+    m_rubiks_cube = std::make_unique<RubiksCube>(resources->model("sub_cube"), 1.05f, 0.1f);// 10x smaller
 
     // start from corner view
     auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
@@ -109,7 +109,7 @@ void MainController::draw() {
 
     // solid black core filling the gaps between subcubes, no material:
     // skip sampling the cubies' texture maps for it
-    constexpr float core_size = 1.5f;
+    constexpr float core_size = 1.5f / 10.0f;// follows the cube's own 5x shrink
     g_buffer_shader->set_mat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(core_size * 0.96f)));
     g_buffer_shader->set_vec3("homePos", glm::vec3(0.0f));
     g_buffer_shader->set_bool("useMaterialMaps", false);
@@ -117,6 +117,24 @@ void MainController::draw() {
 
     g_buffer_shader->set_bool("useMaterialMaps", true);
     m_rubiks_cube->draw(g_buffer_shader);
+
+    // desk
+    g_buffer_shader->set_bool("useMaterialMaps", false);
+    g_buffer_shader->set_bool("isGenericMesh", true);
+    glm::mat4 desk_model = glm::translate(glm::mat4(1.0f), m_desk_position);
+    desk_model = glm::scale(desk_model, glm::vec3(m_desk_scale));
+    g_buffer_shader->set_mat4("model", desk_model);
+    resources->model("desk")->draw(g_buffer_shader);
+
+    // lamp
+    glm::mat4 lamp_model = glm::translate(glm::mat4(1.0f), m_spot_light_pos);
+    // setting the model orientation
+    lamp_model = glm::rotate(lamp_model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    lamp_model = glm::rotate(lamp_model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    lamp_model = glm::scale(lamp_model, glm::vec3(m_lamp_scale));
+    g_buffer_shader->set_mat4("model", lamp_model);
+    resources->model("lamp")->draw(g_buffer_shader);
+    g_buffer_shader->set_bool("isGenericMesh", false);
 
     gbuffer->end_geometry_pass();
 
@@ -150,7 +168,7 @@ void MainController::draw() {
         lighting_shader->set_vec3("neonLightPositions[" + std::to_string(i) + "]", glow_sources[i].position);
         lighting_shader->set_vec3("neonLightColors[" + std::to_string(i) + "]", glow_sources[i].color);
     }
-    lighting_shader->set_float("neonLightStrength", neon_intensity * m_neon_mix * 0.1f);
+    lighting_shader->set_float("neonLightStrength", neon_intensity * m_neon_mix * 0.01f);// dimmed a lot
 
     gbuffer->draw_quad();
 }
@@ -167,8 +185,10 @@ void MainController::set_light_uniforms(engine::resources::Shader *shader) {
     shader->set_float("pointLight.quadratic", 0.032f);
 
     // aim the lamp at the cube's center, wherever it's currently positioned
-    glm::vec3 spot_direction = glm::normalize(glm::vec3(0.0f) - m_spot_light_pos);
-    shader->set_vec3("spotLight.position", m_spot_light_pos);
+    glm::vec3 effective_spot_pos = m_spot_light_pos + m_lamp_offset;
+    // fixed aim direction
+    glm::vec3 spot_direction = glm::normalize(glm::vec3(-1.0f, -1.0f, 0.0f));
+    shader->set_vec3("spotLight.position", effective_spot_pos);
     shader->set_vec3("spotLight.direction", spot_direction);
     shader->set_float("spotLight.cutOff", glm::cos(glm::radians(m_spot_inner_cutoff_deg)));
     shader->set_float("spotLight.outerCutOff", glm::cos(glm::radians(m_spot_outer_cutoff_deg)));
@@ -225,6 +245,16 @@ void MainController::draw_gui() {
     }
     ImGui::SliderFloat("Exposure", &post_process->exposure(), 0.1f, 5.0f);
     ImGui::SliderFloat("Blur spread", &post_process->blur_spread(), 0.5f, 4.0f);
+
+    ImGui::Separator();
+    ImGui::Text("Desk");
+    ImGui::SliderFloat3("Desk position", &m_desk_position.x, -5.0f, 5.0f);
+    ImGui::SliderFloat("Desk scale", &m_desk_scale, 100.0f, 500.0f);
+
+    ImGui::Separator();
+    ImGui::Text("Lamp model");
+    ImGui::SliderFloat3("Lamp bulb offset", &m_lamp_offset.x, -2.0f, 2.0f);
+    ImGui::SliderFloat("Lamp scale", &m_lamp_scale, 0.01f, 300.0f);
 
     ImGui::End();
 

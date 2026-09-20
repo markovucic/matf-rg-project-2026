@@ -29,7 +29,7 @@ struct GlowSource {
 // update() advances whatever layer rotation is currently animating.
 class RubiksCube {
 public:
-    explicit RubiksCube(engine::resources::Model *cube_model, float spacing = 1.05f);
+    explicit RubiksCube(engine::resources::Model *cube_model, float spacing = 1.05f, float cube_scale = 1.0f);
 
     // ignored if a rotation is already playing, so you can't spam two layers at once
     void start_rotation(CubeAxis axis, int layer, float angle_deg);
