@@ -30,6 +30,8 @@ private:
 
     void update_camera();
 
+    void update_neon_mix();
+
     void set_light_uniforms(engine::resources::Shader *shader);
 
     void draw_gui();
@@ -56,6 +58,9 @@ private:
     float m_specular_strength{0.5f};
 
     bool m_neon_active{false};
+    // animated blend between normal lighting (0) and full neon look (1)
+    float m_neon_mix{0.0f};
+    float m_neon_fade_duration{1.5f};
     // brightness multiplier for the glow - color itself comes from each sticker's own color
     float m_neon_intensity{2.0f};
     // how far the glowing line sits inset from the sticker's true edge, and how wide it is

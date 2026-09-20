@@ -83,6 +83,7 @@ void MainController::update() {
     auto platform = engine::core::Controller::get<engine::platform::PlatformController>();
     m_rubiks_cube->update(platform->dt());
     update_camera();
+    update_neon_mix();
 }
 
 void MainController::begin_draw() {
@@ -100,7 +101,7 @@ void MainController::draw() {
     shader->set_vec3("viewPos", graphics->camera()->Position);
     set_light_uniforms(shader);
 
-    shader->set_float("neonMix", m_neon_active ? 1.0f : 0.0f);
+    shader->set_float("neonMix", m_neon_mix);
     shader->set_float("neonIntensity", m_neon_intensity);
     shader->set_float("neonEdgeOffset", m_neon_edge_offset);
     shader->set_float("neonEdgeWidth", m_neon_edge_width);
@@ -226,6 +227,24 @@ void MainController::update_camera() {
             camera->rotate_camera(mouse.dx, mouse.dy);
         }
         camera->zoom(mouse.scroll);
+    }
+}
+
+void MainController::update_neon_mix() {
+    auto platform = engine::core::Controller::get<engine::platform::PlatformController>();
+    float target = m_neon_active ? 1.0f : 0.0f;
+    float step = platform->dt() / m_neon_fade_duration;
+
+    if (m_neon_mix < target) {
+        m_neon_mix += step;
+        if (m_neon_mix > target) {
+            m_neon_mix = target;
+        }
+    } else if (m_neon_mix > target) {
+        m_neon_mix -= step;
+        if (m_neon_mix < target) {
+            m_neon_mix = target;
+        }
     }
 }
 }
