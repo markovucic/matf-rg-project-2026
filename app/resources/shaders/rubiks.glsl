@@ -64,7 +64,7 @@ uniform vec3 viewPos;
 uniform float shininess;
 uniform float specularStrength;
 
-vec3 calc_point_light(PointLight light, vec3 normal, vec3 frag_pos, vec3 view_dir, vec3 base_color) {
+vec3 calc_point_light(PointLight light, vec3 normal, vec3 frag_pos, vec3 view_dir, vec3 base_color, float spec_strength) {
     vec3 light_dir = normalize(light.position - frag_pos);
     vec3 halfway_dir = normalize(light_dir + view_dir);
 
@@ -76,12 +76,12 @@ vec3 calc_point_light(PointLight light, vec3 normal, vec3 frag_pos, vec3 view_di
 
     vec3 ambient = light.ambient * base_color;
     vec3 diffuse = light.diffuse * diff * base_color;
-    vec3 specular = light.specular * spec * specularStrength;
+    vec3 specular = light.specular * spec * spec_strength;
 
     return (ambient + diffuse + specular) * attenuation;
 }
 
-vec3 calc_spot_light(SpotLight light, vec3 normal, vec3 frag_pos, vec3 view_dir, vec3 base_color) {
+vec3 calc_spot_light(SpotLight light, vec3 normal, vec3 frag_pos, vec3 view_dir, vec3 base_color, float spec_strength) {
     vec3 light_dir = normalize(light.position - frag_pos);
     vec3 halfway_dir = normalize(light_dir + view_dir);
 
@@ -98,7 +98,7 @@ vec3 calc_spot_light(SpotLight light, vec3 normal, vec3 frag_pos, vec3 view_dir,
 
     vec3 ambient = light.ambient * base_color;
     vec3 diffuse = light.diffuse * diff * base_color * cone_intensity;
-    vec3 specular = light.specular * spec * specularStrength * cone_intensity;
+    vec3 specular = light.specular * spec * spec_strength * cone_intensity;
 
     return (ambient + diffuse + specular) * attenuation;
 }
@@ -129,9 +129,12 @@ void main(){
         }
     }
 
+    // the hidden plastic body shouldn't be as shiny as stickrs
+    float faceSpecularStrength = isSticker ? specularStrength : specularStrength * 0.2;
+
     vec3 viewDir = normalize(viewPos - pos);
-    vec3 result = calc_point_light(pointLight, worldNorm, pos, viewDir, baseColor)
-                + calc_spot_light(spotLight, worldNorm, pos, viewDir, baseColor);
+    vec3 result = calc_point_light(pointLight, worldNorm, pos, viewDir, baseColor, faceSpecularStrength)
+                + calc_spot_light(spotLight, worldNorm, pos, viewDir, baseColor, faceSpecularStrength);
 
     FragColor = vec4(result, 1.0);
 }

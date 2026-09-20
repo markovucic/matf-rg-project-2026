@@ -25,7 +25,8 @@ bool MainController::loop() {
 
 void MainController::poll_events() {
     auto platform = engine::core::Controller::get<engine::platform::PlatformController>();
-    if (platform->key(engine::platform::MOUSE_BUTTON_LEFT).state() == engine::platform::Key::State::JustPressed) {
+    bool click_is_on_gui = m_show_gui && ImGui::GetIO().WantCaptureMouse;
+    if (!click_is_on_gui && platform->key(engine::platform::MOUSE_BUTTON_LEFT).state() == engine::platform::Key::State::JustPressed) {
         m_camera_control_enabled = !m_camera_control_enabled;
         // tried GLFW_CURSOR_DISABLED here, but it made the camera spiral out of control
         m_skip_next_mouse_delta = true;
