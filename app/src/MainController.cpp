@@ -4,6 +4,7 @@
 #include <engine/graphics/GraphicsController.hpp>
 #include <engine/graphics/PostProcessController.hpp>
 #include <imgui.h>
+#include <random>
 #include <spdlog/spdlog.h>
 #include <string>
 
@@ -56,6 +57,31 @@ void MainController::poll_events() {
 
     if (platform->key(engine::platform::KEY_N).state() == engine::platform::Key::State::JustPressed) {
         toggle_neon();
+    }
+
+    if (m_scramble_moves_remaining > 0) {
+        if (!m_rubiks_cube->is_rotating()) {
+            // same 6 moves the U/F/R/L/D/B keys can do, just randomly chosen
+            struct ScrambleMove {
+                CubeAxis axis;
+                int layer;
+                float angle_deg;
+            };
+            static const ScrambleMove k_moves[6] = {
+                    {CubeAxis::Y, 1, -90.0f},
+                    {CubeAxis::Z, 1, -90.0f},
+                    {CubeAxis::X, 1, -90.0f},
+                    {CubeAxis::X, -1, 90.0f},
+                    {CubeAxis::Y, -1, 90.0f},
+                    {CubeAxis::Z, -1, 90.0f}};
+
+            static std::mt19937 rng{std::random_device{}()};
+            std::uniform_int_distribution<int> pick_move(0, 5);
+            const ScrambleMove &move = k_moves[pick_move(rng)];
+            m_rubiks_cube->start_rotation(move.axis, move.layer, move.angle_deg);
+            --m_scramble_moves_remaining;
+        }
+        return;// block manual layer-rotation input for the whole scramble
     }
 
     // don't queue up another layer rotation while one is still playing
@@ -213,6 +239,18 @@ void MainController::draw_gui() {
 
     ImGui::Begin("Lighting (F1 to hide)");
 
+    if (m_scramble_moves_remaining > 0) {
+        ImGui::BeginDisabled();
+        ImGui::Button("Scrambling...");
+        ImGui::EndDisabled();
+    } else if (ImGui::Button("Scramble the cube")) {
+        static std::mt19937 rng{std::random_device{}()};
+        std::uniform_int_distribution<int> pick_count(20, 30);
+        m_scramble_moves_remaining = pick_count(rng);
+        spdlog::info("[EVENT SEQUENCE] ACTION_X (scramble started, {} moves queued)", m_scramble_moves_remaining);
+    }
+
+    ImGui::Separator();
     ImGui::Text("Room light");
     ImGui::ColorEdit3("Room color", &m_point_light_color.x);
     ImGui::SliderFloat3("Room position", &m_point_light_pos.x, -10.0f, 10.0f);

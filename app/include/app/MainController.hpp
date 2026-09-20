@@ -40,6 +40,10 @@ private:
 
     std::unique_ptr<RubiksCube> m_rubiks_cube;
 
+    // > 0 while a scramble is in progress - counts down one per move, blocks manual
+    // layer-rotation input for the whole duration
+    int m_scramble_moves_remaining{0};
+
     bool m_camera_control_enabled{false};
 
     bool m_skip_next_mouse_delta{false};
