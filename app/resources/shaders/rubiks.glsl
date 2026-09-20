@@ -6,6 +6,7 @@ layout (location = 1) in vec3 aNormal;
 out vec3 pos;
 out vec3 WorldNormal;
 out vec3 LocalNormal;
+out vec3 LocalPos;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -20,6 +21,7 @@ void main()
 
     // this one stays fixed relative to the sub cube, so the sticker color doesn't spin with it
     LocalNormal = aNormal;
+    LocalPos = aPos;// same idea, used to find how close a fragment is to a face's edge
 
     gl_Position = projection * view * vec4(pos, 1.0);
 }
@@ -30,6 +32,7 @@ void main()
 in vec3 pos;
 in vec3 WorldNormal;
 in vec3 LocalNormal;
+in vec3 LocalPos;
 
 out vec4 FragColor;
 
@@ -63,6 +66,29 @@ uniform SpotLight spotLight;// lamp light
 uniform vec3 viewPos;
 uniform float shininess;
 uniform float specularStrength;
+
+uniform float neonMix;// 0 = normal lighting, 1 = full neon look
+uniform float neonIntensity;// neon brightness boost
+uniform float neonEdgeOffset;
+uniform float neonEdgeWidth;
+
+// distance-based glow
+float edge_glow_factor(vec3 local_pos, vec3 local_norm) {
+    float u, v;
+    if (abs(local_norm.x) > 0.8) {
+        u = local_pos.y;
+        v = local_pos.z;
+    } else if (abs(local_norm.y) > 0.8) {
+        u = local_pos.x;
+        v = local_pos.z;
+    } else {
+        u = local_pos.x;
+        v = local_pos.y;
+    }
+
+    float edge_dist = min(0.5 - abs(u), 0.5 - abs(v));
+    return 1.0 - smoothstep(0.0, neonEdgeWidth, abs(edge_dist - neonEdgeOffset));
+}
 
 vec3 calc_point_light(PointLight light, vec3 normal, vec3 frag_pos, vec3 view_dir, vec3 base_color, float spec_strength) {
     vec3 light_dir = normalize(light.position - frag_pos);
@@ -135,6 +161,11 @@ void main(){
     vec3 viewDir = normalize(viewPos - pos);
     vec3 result = calc_point_light(pointLight, worldNorm, pos, viewDir, baseColor, faceSpecularStrength)
                 + calc_spot_light(spotLight, worldNorm, pos, viewDir, baseColor, faceSpecularStrength);
+
+    // neon mode: dark except a glowing outline around each sticker,
+    float glow = isSticker ? edge_glow_factor(LocalPos, localNorm) : 0.0;
+    vec3 neonLook = baseColor * neonIntensity * glow;
+    result = mix(result, neonLook, neonMix);
 
     FragColor = vec4(result, 1.0);
 }

@@ -55,6 +55,13 @@ private:
 
     float m_shininess{32.0f};
     float m_specular_strength{0.5f};
+
+    bool m_neon_active{false};
+    // brightness multiplier for the glow - color itself comes from each sticker's own color
+    float m_neon_intensity{3.0f};
+    // how far the glowing line sits inset from the sticker's true edge, and how wide it is
+    float m_neon_edge_offset{0.05f};
+    float m_neon_edge_width{0.02f};
 };
 }// namespace app
 #endif//APP_MAINCONTROLLER_HPP

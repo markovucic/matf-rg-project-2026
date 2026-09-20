@@ -10,9 +10,15 @@ void MainController::initialize() {
     auto resources = engine::core::Controller::get<engine::resources::ResourcesController>();
     m_rubiks_cube = std::make_unique<RubiksCube>(resources->model("sub_cube"));
 
-    // move the camera back a bit so the whole cube actually fits in frame
-    engine::core::Controller::get<engine::graphics::GraphicsController>()->camera()->Position =
-            glm::vec3(0.0f, 0.0f, 6.0f);
+    // start from corner view
+    auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
+    glm::vec3 start_position(6.0f, 4.5f, 6.0f);
+    camera->Position = start_position;
+
+    glm::vec3 direction_to_center = glm::normalize(glm::vec3(0.0f) - start_position);
+    camera->Yaw = glm::degrees(glm::atan(direction_to_center.z, direction_to_center.x));
+    camera->Pitch = glm::degrees(glm::asin(direction_to_center.y));
+    camera->rotate_camera(0.0f, 0.0f);// refresh Front/Right/Up from the new Yaw/Pitch
 
     // cursor starts visible/free since camera control starts off
     engine::core::Controller::get<engine::platform::PlatformController>()->set_enable_cursor(true);
@@ -34,6 +40,10 @@ void MainController::poll_events() {
 
     if (platform->key(engine::platform::KEY_F1).state() == engine::platform::Key::State::JustPressed) {
         m_show_gui = !m_show_gui;
+    }
+
+    if (platform->key(engine::platform::KEY_N).state() == engine::platform::Key::State::JustPressed) {
+        m_neon_active = !m_neon_active;
     }
 
     // don't queue up another layer rotation while one is still playing
@@ -79,6 +89,11 @@ void MainController::draw() {
     shader->set_mat4("view", graphics->camera()->view_matrix());
     shader->set_vec3("viewPos", graphics->camera()->Position);
     set_light_uniforms(shader);
+
+    shader->set_float("neonMix", m_neon_active ? 1.0f : 0.0f);
+    shader->set_float("neonIntensity", m_neon_intensity);
+    shader->set_float("neonEdgeOffset", m_neon_edge_offset);
+    shader->set_float("neonEdgeWidth", m_neon_edge_width);
 
     m_rubiks_cube->draw(shader);
 
@@ -138,6 +153,15 @@ void MainController::draw_gui() {
     ImGui::Separator();
     ImGui::SliderFloat("Shininess", &m_shininess, 2.0f, 256.0f);
     ImGui::SliderFloat("Specular strength", &m_specular_strength, 0.0f, 1.0f);
+
+    ImGui::Separator();
+    ImGui::Text("Neon (N to toggle)");
+    ImGui::SliderFloat("Neon intensity", &m_neon_intensity, 1.0f, 8.0f);
+    ImGui::SliderFloat("Edge offset", &m_neon_edge_offset, 0.0f, 0.4f);
+    ImGui::SliderFloat("Edge width", &m_neon_edge_width, 0.005f, 0.15f);
+    if (ImGui::Button(m_neon_active ? "Turn neon off" : "Turn neon on")) {
+        m_neon_active = !m_neon_active;
+    }
 
     ImGui::End();
 
