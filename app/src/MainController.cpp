@@ -88,23 +88,28 @@ void MainController::poll_events() {
     if (m_rubiks_cube->is_rotating()) {
         return;
     }
+    // holding alt reverses the move (e.g. U becomes U')
+    bool alt_held = platform->key(engine::platform::KEY_LEFT_ALT).is_down()
+                  || platform->key(engine::platform::KEY_RIGHT_ALT).is_down();
+    float reverse = alt_held ? -1.0f : 1.0f;
+
     if (platform->key(engine::platform::KEY_U).is_down()) {
-        m_rubiks_cube->start_rotation(CubeAxis::Y, 1, -90.0f);
+        m_rubiks_cube->start_rotation(CubeAxis::Y, 1, -90.0f * reverse);
     }
     if (platform->key(engine::platform::KEY_F).is_down()) {
-        m_rubiks_cube->start_rotation(CubeAxis::Z, 1, -90.0f);
+        m_rubiks_cube->start_rotation(CubeAxis::Z, 1, -90.0f * reverse);
     }
     if (platform->key(engine::platform::KEY_R).is_down()) {
-        m_rubiks_cube->start_rotation(CubeAxis::X, 1, -90.0f);
+        m_rubiks_cube->start_rotation(CubeAxis::X, 1, -90.0f * reverse);
     }
     if (platform->key(engine::platform::KEY_L).is_down()) {
-        m_rubiks_cube->start_rotation(CubeAxis::X, -1, 90.0f);
+        m_rubiks_cube->start_rotation(CubeAxis::X, -1, 90.0f * reverse);
     }
     if (platform->key(engine::platform::KEY_D).is_down()) {
-        m_rubiks_cube->start_rotation(CubeAxis::Y, -1, 90.0f);
+        m_rubiks_cube->start_rotation(CubeAxis::Y, -1, 90.0f * reverse);
     }
     if (platform->key(engine::platform::KEY_B).is_down()) {
-        m_rubiks_cube->start_rotation(CubeAxis::Z, -1, 90.0f);
+        m_rubiks_cube->start_rotation(CubeAxis::Z, -1, 90.0f * reverse);
     }
 }
 
