@@ -1,5 +1,6 @@
 #include <app/MainController.hpp>
 #include <engine/core/Engine.hpp>
+#include <engine/graphics/GBuffer.hpp>
 #include <engine/graphics/GraphicsController.hpp>
 #include <engine/graphics/PostProcessController.hpp>
 #include <imgui.h>
@@ -87,20 +88,45 @@ void MainController::update() {
 }
 
 void MainController::begin_draw() {
-    engine::core::Controller::get<engine::graphics::PostProcessController>()->begin_scene_capture();
-    engine::graphics::OpenGL::clear_buffers();
+    engine::core::Controller::get<engine::graphics::GBuffer>()->begin_geometry_pass();
 }
 
 void MainController::draw() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
     auto resources = engine::core::Controller::get<engine::resources::ResourcesController>();
-    auto shader = resources->shader("rubiks");
+    auto gbuffer = engine::core::Controller::get<engine::graphics::GBuffer>();
 
-    shader->use();
-    shader->set_mat4("projection", graphics->projection_matrix());
-    shader->set_mat4("view", graphics->camera()->view_matrix());
-    shader->set_vec3("viewPos", graphics->camera()->Position);
-    set_light_uniforms(shader);
+    // geometry pass: fill the G-buffer with material data, no lighting yet
+    auto g_buffer_shader = resources->shader("g_buffer");
+    g_buffer_shader->use();
+    g_buffer_shader->set_mat4("projection", graphics->projection_matrix());
+    g_buffer_shader->set_mat4("view", graphics->camera()->view_matrix());
+    g_buffer_shader->set_float("specularStrength", m_specular_strength);
+    g_buffer_shader->set_float("tubeSpecularStrength", m_tube_specular_strength);
+    g_buffer_shader->set_float("neonEdgeOffset", m_neon_edge_offset);
+    g_buffer_shader->set_float("neonEdgeWidth", m_neon_edge_width);
+
+    // solid black core filling the gaps between subcubes
+    constexpr float core_size = 1.5f;
+    g_buffer_shader->set_mat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(core_size * 0.96f)));
+    g_buffer_shader->set_vec3("homePos", glm::vec3(0.0f));
+    resources->model("sphere_core")->draw(g_buffer_shader);
+
+    m_rubiks_cube->draw(g_buffer_shader);
+
+    gbuffer->end_geometry_pass();
+
+    // lighting pass: read the G-buffer back once per screen pixel instead of once per
+    // fragment per light like the old forward-shaded version did
+    auto post_process = engine::core::Controller::get<engine::graphics::PostProcessController>();
+    post_process->begin_scene_capture();
+    engine::graphics::OpenGL::clear_buffers();
+
+    auto lighting_shader = resources->shader("deferred_lighting");
+    lighting_shader->use();
+    gbuffer->bind_textures(lighting_shader);
+    lighting_shader->set_vec3("viewPos", graphics->camera()->Position);
+    set_light_uniforms(lighting_shader);
 
     float neon_intensity = m_neon_intensity;
     float pulse_start = m_neon_fade_duration + m_neon_hold_duration;
@@ -111,24 +137,14 @@ void MainController::draw() {
         neon_intensity *= 0.81f + 0.19f * (glm::sin(phase)); // fine-tuned so it looks the best
     }
 
-    shader->set_float("neonMix", m_neon_mix);
-    shader->set_float("neonIntensity", neon_intensity);
-    shader->set_float("neonEdgeOffset", m_neon_edge_offset);
-    shader->set_float("neonEdgeWidth", m_neon_edge_width);
+    lighting_shader->set_float("neonMix", m_neon_mix);
+    lighting_shader->set_float("neonIntensity", neon_intensity);
 
-    // solid black core filling the gaps between subcubes
-    constexpr float core_size = 1.5f;
-    shader->set_mat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(core_size * 0.96f)));
-    shader->set_vec3("homePos", glm::vec3(0.0f));
-    resources->model("sphere_core")->draw(shader);
-
-    m_rubiks_cube->draw(shader);
+    gbuffer->draw_quad();
 }
 
 void MainController::set_light_uniforms(engine::resources::Shader *shader) {
     shader->set_float("shininess", m_shininess);
-    shader->set_float("specularStrength", m_specular_strength);
-    shader->set_float("tubeSpecularStrength", m_tube_specular_strength);
 
     shader->set_vec3("pointLight.position", m_point_light_pos);
     shader->set_vec3("pointLight.ambient", m_point_light_color * 0.15f);
