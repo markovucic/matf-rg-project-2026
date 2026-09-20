@@ -10,6 +10,7 @@ RubiksCube::RubiksCube(engine::resources::Model *cube_model, float spacing)
             for (int z = -1; z <= 1; ++z) {
                 auto &sub_cube = m_cubes[x + 1][y + 1][z + 1];
                 sub_cube.grid_position = glm::ivec3(x, y, z);
+                sub_cube.home_position = glm::ivec3(x, y, z);
                 sub_cube.transform = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z) * spacing);
             }
         }
@@ -107,6 +108,7 @@ void RubiksCube::draw(const engine::resources::Shader *shader) {
                 if (x == 1 && y == 1 && z == 1) continue;// center piece is never visible, skip drawing it
 
                 shader->set_mat4("model", m_cubes[x][y][z].transform);
+                shader->set_vec3("homePos", glm::vec3(m_cubes[x][y][z].home_position));
                 m_cube_model->draw(shader);
             }
         }

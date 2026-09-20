@@ -12,6 +12,9 @@ void MainController::initialize() {
     // move the camera back a bit so the whole cube actually fits in frame
     engine::core::Controller::get<engine::graphics::GraphicsController>()->camera()->Position =
             glm::vec3(0.0f, 0.0f, 6.0f);
+
+    // cursor starts visible/free since camera control starts off
+    engine::core::Controller::get<engine::platform::PlatformController>()->set_enable_cursor(true);
 }
 
 bool MainController::loop() {
@@ -23,6 +26,8 @@ void MainController::poll_events() {
     auto platform = engine::core::Controller::get<engine::platform::PlatformController>();
     if (platform->key(engine::platform::MOUSE_BUTTON_LEFT).state() == engine::platform::Key::State::JustPressed) {
         m_camera_control_enabled = !m_camera_control_enabled;
+        // tried GLFW_CURSOR_DISABLED here, but it made the camera spiral out of control
+        m_skip_next_mouse_delta = true;
     }
 
     // don't queue up another layer rotation while one is still playing
@@ -103,10 +108,14 @@ void MainController::update_camera() {
         camera->move_camera(engine::graphics::Camera::Movement::DOWN, dt);
     }
 
-    // only rotate/zoom the camera with the mouse while it's "grabbed" (see poll_events)
+    // only rotate/zoom the camera with the mouse while it's "grabbed"
     if (m_camera_control_enabled) {
         auto mouse = platform->mouse();
-        camera->rotate_camera(mouse.dx, mouse.dy);
+        if (m_skip_next_mouse_delta) {
+            m_skip_next_mouse_delta = false;
+        } else {
+            camera->rotate_camera(mouse.dx, mouse.dy);
+        }
         camera->zoom(mouse.scroll);
     }
 }

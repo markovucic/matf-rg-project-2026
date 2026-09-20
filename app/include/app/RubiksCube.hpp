@@ -13,12 +13,12 @@ enum class CubeAxis { X,
 
 struct SubCube {
     glm::mat4 transform{1.0f};
-    glm::ivec3 grid_position{};// where it sits in the 3x3x3 grid, -1/0/1 per axis
+    glm::ivec3 grid_position{};// where it currently sits in the grid, updates every move
+    glm::ivec3 home_position{}; // where it started out - from this we deduce which faces are stickers.
 };
 
-// 27 little cubes arranged in a grid, all pointing at the same Model (the geometry is
-// identical, only the transform per cube changes). update() advances whatever layer
-// rotation is currently animating.
+// 27 little cubes arranged in a grid, all pointing at the same Model.
+// update() advances whatever layer rotation is currently animating.
 class RubiksCube {
 public:
     explicit RubiksCube(engine::resources::Model *cube_model, float spacing = 1.05f);

@@ -33,6 +33,8 @@ private:
     // click left mouse button to grab/release the camera, otherwise moving the mouse
     // while rotating a layer would also spin the camera around
     bool m_camera_control_enabled{false};
+
+    bool m_skip_next_mouse_delta{false};
 };
 }// namespace app
 #endif//APP_MAINCONTROLLER_HPP

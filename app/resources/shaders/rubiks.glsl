@@ -37,27 +37,34 @@ uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform float ambientInt;
 uniform float diffuseInt;
+uniform vec3 homePos;// where this sub cube STARTED, -1/0/1 per axis
 
 void main(){
-    // pick a face color based on which way the sub cube's local normal points
-    // (basically hardcoding the sticker colors instead of using a texture)
     vec3 localNorm = normalize(LocalNormal);
-    vec3 baseColor = vec3(0.05);
-
-    if (abs(localNorm.x) > 0.8) {
-        baseColor = (localNorm.x > 0.0) ? vec3(0.9, 0.0, 0.0)
-                                       : vec3(1.0, 0.4, 0.0);
-    }
-    else if (abs(localNorm.y) > 0.8) {
-        baseColor = (localNorm.y > 0.0) ? vec3(0.95, 0.95, 0.95)
-                                       : vec3(0.9, 0.8, 0.0);
-    }
-    else if (abs(localNorm.z) > 0.8) {
-        baseColor = (localNorm.z > 0.0) ? vec3(0.0, 0.7, 0.1)
-                                       : vec3(0.0, 0.2, 0.8);
-    }
-
     vec3 worldNorm = normalize(WorldNormal);
+
+    // both localNorm and homePos are fixed to the subcube and never change as it moves around,
+    bool isSticker = (localNorm.x > 0.8 && homePos.x > 0.5) || (localNorm.x < -0.8 && homePos.x < -0.5)
+                   || (localNorm.y > 0.8 && homePos.y > 0.5) || (localNorm.y < -0.8 && homePos.y < -0.5)
+                   || (localNorm.z > 0.8 && homePos.z > 0.5) || (localNorm.z < -0.8 && homePos.z < -0.5);
+
+    vec3 baseColor = vec3(0.02);// dark plastic body
+
+    if (isSticker) {
+        if (abs(localNorm.x) > 0.8) {
+            baseColor = (localNorm.x > 0.0) ? vec3(0.9, 0.0, 0.0)
+                                           : vec3(1.0, 0.4, 0.0);
+        }
+        else if (abs(localNorm.y) > 0.8) {
+            baseColor = (localNorm.y > 0.0) ? vec3(0.95, 0.95, 0.95)
+                                           : vec3(0.9, 0.8, 0.0);
+        }
+        else if (abs(localNorm.z) > 0.8) {
+            baseColor = (localNorm.z > 0.0) ? vec3(0.0, 0.7, 0.1)
+                                           : vec3(0.0, 0.2, 0.8);
+        }
+    }
+
     vec3 lightDir = normalize(lightPos - pos);
 
     vec3 ambient = ambientInt * lightColor;
