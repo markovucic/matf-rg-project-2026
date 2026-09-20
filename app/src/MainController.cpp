@@ -13,13 +13,15 @@ void MainController::initialize() {
 
     // start from corner view
     auto camera = engine::core::Controller::get<engine::graphics::GraphicsController>()->camera();
-    glm::vec3 start_position(6.0f, 4.5f, 6.0f);
+    glm::vec3 start_position(2.2f, 4.5f, 8.2f);
     camera->Position = start_position;
 
     glm::vec3 direction_to_center = glm::normalize(glm::vec3(0.0f) - start_position);
     camera->Yaw = glm::degrees(glm::atan(direction_to_center.z, direction_to_center.x));
     camera->Pitch = glm::degrees(glm::asin(direction_to_center.y));
     camera->rotate_camera(0.0f, 0.0f);// refresh Front/Right/Up from the new Yaw/Pitch
+
+    camera->MouseSensitivity *= 0.7f;
 
     // cursor starts visible/free since camera control starts off
     engine::core::Controller::get<engine::platform::PlatformController>()->set_enable_cursor(true);
@@ -33,10 +35,16 @@ bool MainController::loop() {
 void MainController::poll_events() {
     auto platform = engine::core::Controller::get<engine::platform::PlatformController>();
     bool click_is_on_gui = m_show_gui && ImGui::GetIO().WantCaptureMouse;
-    if (!click_is_on_gui && platform->key(engine::platform::MOUSE_BUTTON_LEFT).state() == engine::platform::Key::State::JustPressed) {
-        m_camera_control_enabled = !m_camera_control_enabled;
-        // tried GLFW_CURSOR_DISABLED here, but it made the camera spiral out of control
+    auto left_click_state = platform->key(engine::platform::MOUSE_BUTTON_LEFT).state();
+    if (!click_is_on_gui && left_click_state == engine::platform::Key::State::JustPressed) {
+        // hold left click to look around, release to let go
+        m_camera_control_enabled = true;
+
+        platform->set_enable_cursor(false);
         m_skip_next_mouse_delta = true;
+    } else if (left_click_state == engine::platform::Key::State::JustReleased) {
+        m_camera_control_enabled = false;
+        platform->set_enable_cursor(true);
     }
 
     if (platform->key(engine::platform::KEY_F1).state() == engine::platform::Key::State::JustPressed) {
@@ -171,6 +179,7 @@ void MainController::draw_gui() {
         post_process->set_bloom_enabled(bloom_enabled);
     }
     ImGui::SliderFloat("Exposure", &post_process->exposure(), 0.1f, 5.0f);
+    ImGui::SliderFloat("Blur spread", &post_process->blur_spread(), 0.5f, 4.0f);
 
     ImGui::End();
 

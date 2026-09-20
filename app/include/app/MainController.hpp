@@ -35,8 +35,7 @@ private:
     void draw_gui();
 
     std::unique_ptr<RubiksCube> m_rubiks_cube;
-    // click left mouse button to grab/release the camera, otherwise moving the mouse
-    // while rotating a layer would also spin the camera around
+
     bool m_camera_control_enabled{false};
 
     bool m_skip_next_mouse_delta{false};
@@ -58,7 +57,7 @@ private:
 
     bool m_neon_active{false};
     // brightness multiplier for the glow - color itself comes from each sticker's own color
-    float m_neon_intensity{3.0f};
+    float m_neon_intensity{2.0f};
     // how far the glowing line sits inset from the sticker's true edge, and how wide it is
     float m_neon_edge_offset{0.05f};
     float m_neon_edge_width{0.02f};

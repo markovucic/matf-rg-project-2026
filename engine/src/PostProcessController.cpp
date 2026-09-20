@@ -133,6 +133,7 @@ void PostProcessController::end_scene_capture_and_composite() {
 void PostProcessController::blur_bright_texture() {
     auto shader = core::Controller::get<resources::ResourcesController>()->shader("post_process_blur");
     shader->use();
+    shader->set_float("spread", m_blur_spread);
 
     int write_index = 0;
     uint32_t read_texture = m_bright_color_texture;

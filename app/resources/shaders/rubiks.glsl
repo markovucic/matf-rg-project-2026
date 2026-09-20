@@ -170,7 +170,7 @@ void main(){
 
     FragColor = vec4(result, 1.0);
 
-    float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722));
+    float brightness = max(result.r, max(result.g, result.b));
     if (brightness > 1.0) {
         BrightColor = vec4(result, 1.0);
     } else {

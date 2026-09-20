@@ -22,3 +22,5 @@ app/APP
 engine/libs/glfw/src
 app/imgui.ini
 /build/
+*.exe
+*.dll

@@ -78,6 +78,15 @@ public:
         return m_blur_passes;
     }
 
+    /**
+    * @brief Use this to read or change how many texels apart each blur tap samples.
+    * Widens the blur radius without needing more passes.
+    * @returns A mutable reference to the blur spread.
+    */
+    float &blur_spread() {
+        return m_blur_spread;
+    }
+
 private:
     void initialize() override;
 
@@ -105,6 +114,7 @@ private:
     bool m_bloom_enabled{true};
     float m_exposure{1.0f};
     int m_blur_passes{10};
+    float m_blur_spread{1.0f};
 
     int m_width{0};
     int m_height{0};
