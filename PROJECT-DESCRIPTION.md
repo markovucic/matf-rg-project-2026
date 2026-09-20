@@ -1,6 +1,6 @@
 # Rubik's Cube
 
-{INDEX} - {STUDENT-FULL-NAME}
+**6/2022 - Marko Vučić**
 
 A 3x3x3 Rubik's cube rendered with deferred shading. Each layer can be turned individually,
 the cube can be scrambled with one button, and it has a "neon mode" where the sticker edges
@@ -59,10 +59,10 @@ the deferred shading pass, plus the full-screen quad the lighting pass draws wit
 
 ## Models:
 
-sub_cube - hand-written, plain unit cube used for every cubie  
-sphere_core - hand-written, sits inside the cube so the gaps between cubies don't look hollow  
-desk - .glb downloaded model of a desk - did not infer color from it
-lamp - .glb, same as desk model
+`sub_cube.obj` - hand-written, plain unit cube used for every cubie  
+`sphere_core.obj` - hand-written, sits inside the cube so the gaps between cubies don't look hollow  
+`desk.glb` - .glb downloaded model of a desk - did not infer color from it\
+`lamp.glb` - .glb, same as desk model
 
 ## Textures
 
