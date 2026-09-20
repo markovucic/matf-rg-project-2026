@@ -34,7 +34,8 @@ in vec3 WorldNormal;
 in vec3 LocalNormal;
 in vec3 LocalPos;
 
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;// fragments brighter than 1.0 bloom
 
 uniform vec3 homePos;// where this sub cube STARTED, -1/0/1 per axis
 
@@ -168,4 +169,11 @@ void main(){
     result = mix(result, neonLook, neonMix);
 
     FragColor = vec4(result, 1.0);
+
+    float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722));
+    if (brightness > 1.0) {
+        BrightColor = vec4(result, 1.0);
+    } else {
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }
 }

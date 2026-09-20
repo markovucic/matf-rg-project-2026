@@ -1,11 +1,13 @@
 #include <app/MainController.hpp>
 #include <app/RubiksApp.hpp>
+#include <engine/graphics/PostProcessController.hpp>
 
 namespace app {
 void RubiksApp::app_setup() {
-    // just the one controller for now, make sure it runs after the engine finishes its own setup
     auto main_controller = register_controller<MainController>();
+    auto post_process = register_controller<engine::graphics::PostProcessController>();
     main_controller->after(engine::core::Controller::get<engine::core::EngineControllersEnd>());
+    post_process->after(engine::core::Controller::get<engine::core::EngineControllersEnd>());
 }
 }// namespace app
 

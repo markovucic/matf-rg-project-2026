@@ -1,6 +1,7 @@
 #include <app/MainController.hpp>
 #include <engine/core/Engine.hpp>
 #include <engine/graphics/GraphicsController.hpp>
+#include <engine/graphics/PostProcessController.hpp>
 #include <imgui.h>
 
 namespace app {
@@ -77,6 +78,7 @@ void MainController::update() {
 }
 
 void MainController::begin_draw() {
+    engine::core::Controller::get<engine::graphics::PostProcessController>()->begin_scene_capture();
     engine::graphics::OpenGL::clear_buffers();
 }
 
@@ -96,8 +98,6 @@ void MainController::draw() {
     shader->set_float("neonEdgeWidth", m_neon_edge_width);
 
     m_rubiks_cube->draw(shader);
-
-    draw_gui();
 }
 
 void MainController::set_light_uniforms(engine::resources::Shader *shader) {
@@ -163,12 +163,24 @@ void MainController::draw_gui() {
         m_neon_active = !m_neon_active;
     }
 
+    ImGui::Separator();
+    ImGui::Text("Bloom");
+    auto post_process = engine::core::Controller::get<engine::graphics::PostProcessController>();
+    bool bloom_enabled = post_process->is_bloom_enabled();
+    if (ImGui::Checkbox("Enable bloom", &bloom_enabled)) {
+        post_process->set_bloom_enabled(bloom_enabled);
+    }
+    ImGui::SliderFloat("Exposure", &post_process->exposure(), 0.1f, 5.0f);
+
     ImGui::End();
 
     graphics->end_gui();
 }
 
 void MainController::end_draw() {
+    // gui is drawn straight onto the screen, not through the bloom pipeline
+    engine::core::Controller::get<engine::graphics::PostProcessController>()->end_scene_capture_and_composite();
+    draw_gui();
     engine::core::Controller::get<engine::platform::PlatformController>()->swap_buffers();
 }
 
@@ -207,4 +219,4 @@ void MainController::update_camera() {
         camera->zoom(mouse.scroll);
     }
 }
-}// namespace app
+}
