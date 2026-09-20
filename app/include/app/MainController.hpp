@@ -61,8 +61,13 @@ private:
     // animated blend between normal lighting (0) and full neon look (1)
     float m_neon_mix{0.0f};
     float m_neon_fade_duration{1.5f};
+    // seconds since neon was last turned on, resets to 0 the moment it's turned off
+    float m_neon_active_time{0.0f};
+    // once the fade-in finishes, glow holds steady for this long before it starts pulsing
+    float m_neon_hold_duration{4.0f};
+    float m_neon_pulse_period{2.0f};
     // brightness multiplier for the glow - color itself comes from each sticker's own color
-    float m_neon_intensity{2.0f};
+    float m_neon_intensity{2.5f};
     // how far the glowing line sits inset from the sticker's true edge, and how wide it is
     float m_neon_edge_offset{0.05f};
     float m_neon_edge_width{0.02f};

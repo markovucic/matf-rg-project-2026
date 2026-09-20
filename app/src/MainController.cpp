@@ -101,8 +101,17 @@ void MainController::draw() {
     shader->set_vec3("viewPos", graphics->camera()->Position);
     set_light_uniforms(shader);
 
+    float neon_intensity = m_neon_intensity;
+    float pulse_start = m_neon_fade_duration + m_neon_hold_duration;
+    if (m_neon_active_time > pulse_start) {
+        constexpr float k_two_pi = 6.28318530718f;
+        float pulse_time = m_neon_active_time - pulse_start;
+        float phase = k_two_pi * pulse_time / m_neon_pulse_period;
+        neon_intensity *= 0.81f + 0.19f * (glm::sin(phase)); // fine-tuned so it looks the best
+    }
+
     shader->set_float("neonMix", m_neon_mix);
-    shader->set_float("neonIntensity", m_neon_intensity);
+    shader->set_float("neonIntensity", neon_intensity);
     shader->set_float("neonEdgeOffset", m_neon_edge_offset);
     shader->set_float("neonEdgeWidth", m_neon_edge_width);
 
@@ -245,6 +254,12 @@ void MainController::update_neon_mix() {
         if (m_neon_mix < target) {
             m_neon_mix = target;
         }
+    }
+
+    if (m_neon_active) {
+        m_neon_active_time += platform->dt();
+    } else {
+        m_neon_active_time = 0.0f;
     }
 }
 }
