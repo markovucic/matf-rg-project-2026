@@ -54,8 +54,10 @@ private:
     float m_spot_inner_cutoff_deg{15.0f};
     float m_spot_outer_cutoff_deg{25.0f};
 
-    float m_shininess{32.0f};
-    float m_specular_strength{0.5f};
+    float m_shininess{15.0f};
+    float m_specular_strength{0.4f};
+    // the glass/plastic tube housing the neon glow is shinier than sticker
+    float m_tube_specular_strength{1.5f};
 
     bool m_neon_active{false};
     // animated blend between normal lighting (0) and full neon look (1)
@@ -68,9 +70,10 @@ private:
     float m_neon_pulse_period{2.0f};
     // brightness multiplier for the glow - color itself comes from each sticker's own color
     float m_neon_intensity{2.5f};
-    // how far the glowing line sits inset from the sticker's true edge, and how wide it is
+    // how far the glowing line sits inset from the sticker's true edge, and how wide it is -
+    // fixed rather than GUI-tunable so it can't be widened enough to overrun the sticker edge
     float m_neon_edge_offset{0.05f};
-    float m_neon_edge_width{0.02f};
+    float m_neon_edge_width{0.06f};
 };
 }// namespace app
 #endif//APP_MAINCONTROLLER_HPP

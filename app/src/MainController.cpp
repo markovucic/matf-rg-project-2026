@@ -93,7 +93,8 @@ void MainController::begin_draw() {
 
 void MainController::draw() {
     auto graphics = engine::core::Controller::get<engine::graphics::GraphicsController>();
-    auto shader = engine::core::Controller::get<engine::resources::ResourcesController>()->shader("rubiks");
+    auto resources = engine::core::Controller::get<engine::resources::ResourcesController>();
+    auto shader = resources->shader("rubiks");
 
     shader->use();
     shader->set_mat4("projection", graphics->projection_matrix());
@@ -115,12 +116,19 @@ void MainController::draw() {
     shader->set_float("neonEdgeOffset", m_neon_edge_offset);
     shader->set_float("neonEdgeWidth", m_neon_edge_width);
 
+    // solid black core filling the gaps between subcubes
+    constexpr float k_whole_cube_size = 3.1f;
+    shader->set_mat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(k_whole_cube_size * 0.96f)));
+    shader->set_vec3("homePos", glm::vec3(0.0f));
+    resources->model("sub_cube")->draw(shader);
+
     m_rubiks_cube->draw(shader);
 }
 
 void MainController::set_light_uniforms(engine::resources::Shader *shader) {
     shader->set_float("shininess", m_shininess);
     shader->set_float("specularStrength", m_specular_strength);
+    shader->set_float("tubeSpecularStrength", m_tube_specular_strength);
 
     shader->set_vec3("pointLight.position", m_point_light_pos);
     shader->set_vec3("pointLight.ambient", m_point_light_color * 0.15f);
@@ -171,12 +179,11 @@ void MainController::draw_gui() {
     ImGui::Separator();
     ImGui::SliderFloat("Shininess", &m_shininess, 2.0f, 256.0f);
     ImGui::SliderFloat("Specular strength", &m_specular_strength, 0.0f, 1.0f);
+    ImGui::SliderFloat("Tube specular strength", &m_tube_specular_strength, 0.0f, 2.0f);
 
     ImGui::Separator();
     ImGui::Text("Neon (N to toggle)");
     ImGui::SliderFloat("Neon intensity", &m_neon_intensity, 1.0f, 8.0f);
-    ImGui::SliderFloat("Edge offset", &m_neon_edge_offset, 0.0f, 0.4f);
-    ImGui::SliderFloat("Edge width", &m_neon_edge_width, 0.005f, 0.15f);
     if (ImGui::Button(m_neon_active ? "Turn neon off" : "Turn neon on")) {
         m_neon_active = !m_neon_active;
     }

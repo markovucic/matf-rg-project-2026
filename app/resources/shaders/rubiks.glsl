@@ -67,6 +67,7 @@ uniform SpotLight spotLight;// lamp light
 uniform vec3 viewPos;
 uniform float shininess;
 uniform float specularStrength;
+uniform float tubeSpecularStrength;
 
 uniform float neonMix;// 0 = normal lighting, 1 = full neon look
 uniform float neonIntensity;// neon brightness boost
@@ -156,15 +157,17 @@ void main(){
         }
     }
 
-    // the hidden plastic body shouldn't be as shiny as stickrs
+    float glow = isSticker ? edge_glow_factor(LocalPos, localNorm) : 0.0;
+
+    // the hidden plastic body shouldn't be as shiny as stickers
     float faceSpecularStrength = isSticker ? specularStrength : specularStrength * 0.2;
+    faceSpecularStrength = mix(faceSpecularStrength, tubeSpecularStrength, glow);
 
     vec3 viewDir = normalize(viewPos - pos);
     vec3 result = calc_point_light(pointLight, worldNorm, pos, viewDir, baseColor, faceSpecularStrength)
                 + calc_spot_light(spotLight, worldNorm, pos, viewDir, baseColor, faceSpecularStrength);
 
     // neon mode: dark except a glowing outline around each sticker,
-    float glow = isSticker ? edge_glow_factor(LocalPos, localNorm) : 0.0;
     vec3 neonLook = baseColor * neonIntensity * glow;
     result = mix(result, neonLook, neonMix);
 
