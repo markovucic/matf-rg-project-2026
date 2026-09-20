@@ -67,7 +67,7 @@ void MainController::poll_events() {
                 int layer;
                 float angle_deg;
             };
-            static const ScrambleMove k_moves[6] = {
+            static const ScrambleMove MOVES[6] = {
                     {CubeAxis::Y, 1, -90.0f},
                     {CubeAxis::Z, 1, -90.0f},
                     {CubeAxis::X, 1, -90.0f},
@@ -77,7 +77,7 @@ void MainController::poll_events() {
 
             static std::mt19937 rng{std::random_device{}()};
             std::uniform_int_distribution<int> pick_move(0, 5);
-            const ScrambleMove &move = k_moves[pick_move(rng)];
+            const ScrambleMove &move = MOVES[pick_move(rng)];
             m_rubiks_cube->start_rotation(move.axis, move.layer, move.angle_deg);
             --m_scramble_moves_remaining;
         }
@@ -141,8 +141,8 @@ void MainController::draw() {
 
     // solid black core filling the gaps between subcubes, no material:
     // skip sampling the cubies' texture maps for it
-    constexpr float core_size = 1.5f / 10.0f;// follows the cube's own 5x shrink
-    g_buffer_shader->set_mat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(core_size * 0.96f)));
+    constexpr float CORE_SIZE = 1.5f / 10.0f;// follows the cube's own 5x shrink
+    g_buffer_shader->set_mat4("model", glm::scale(glm::mat4(1.0f), glm::vec3(CORE_SIZE * 0.96f)));
     g_buffer_shader->set_vec3("homePos", glm::vec3(0.0f));
     g_buffer_shader->set_bool("useMaterialMaps", false);
     resources->model("sphere_core")->draw(g_buffer_shader);
@@ -187,9 +187,9 @@ void MainController::draw() {
     float neon_intensity = m_neon_intensity;
     float pulse_start = m_neon_fade_duration + m_neon_hold_duration;
     if (m_neon_active_time > pulse_start) {
-        constexpr float k_two_pi = 6.28318530718f;
+        constexpr float TWO_PI = 6.28318530718f;
         float pulse_time = m_neon_active_time - pulse_start;
-        float phase = k_two_pi * pulse_time / m_neon_pulse_period;
+        float phase = TWO_PI * pulse_time / m_neon_pulse_period;
         neon_intensity *= 0.81f + 0.19f * (glm::sin(phase)); // fine-tuned so it looks the best
     }
 
